@@ -58,6 +58,11 @@ class MCPServer {
     const { id, method, params } = message;
     console.error(`Handling method: ${method} with id: ${id}`);
 
+    if (typeof id === "undefined") {
+      // 通知なので何も返さない
+      return;
+    }
+
     switch (method) {
       case 'initialize':
         this.handleInitialize(id, params);
