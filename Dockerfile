@@ -28,9 +28,9 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV DOCKER_ENV=true
 
-# Health check
+# Health check for WebSocket server
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD node -e "const WebSocket = require('ws'); const ws = new WebSocket('ws://localhost:3000'); ws.on('open', () => { process.exit(0); }); ws.on('error', () => { process.exit(1); }); setTimeout(() => { process.exit(1); }, 5000);"
 
 # Start the application
 CMD ["npm", "start"] 
