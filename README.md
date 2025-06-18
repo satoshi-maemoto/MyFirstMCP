@@ -42,6 +42,65 @@ Model Context Protocol (MCP) は、AIモデルと外部ツール・リソース�
 }
 ```
 
+## AIからMCPサーバーを呼び出す方法
+
+### Claude Desktopでの設定
+
+1. **設定ファイルを配置**
+   ```bash
+   # Claude Desktopの設定ディレクトリにコピー
+   cp claude-desktop-config.json ~/.config/claude/desktop_config.json
+   ```
+
+2. **MCPサーバーを起動**
+   ```bash
+   # AI用スクリプトで起動
+   ./scripts/start-mcp-for-ai.sh
+   
+   # または、Docker Composeで起動
+   docker-compose up -d
+   ```
+
+3. **Claude Desktopを再起動**
+   - Claude Desktopを完全に終了して再起動
+   - MCPサーバーが利用可能になります
+
+### Claude Webでの設定
+
+1. **MCPサーバーを公開**
+   ```bash
+   # ngrokを使用してローカルサーバーを公開
+   ngrok http 3000
+   ```
+
+2. **Claude Webの設定**
+   - Claude Webの設定でMCPサーバーのURLを指定
+   - `wss://your-ngrok-url.ngrok.io`形式で指定
+
+### 他のAIクライアントでの設定
+
+#### GPT-4o
+- OpenAIのFunction Calling APIを使用
+- MCPサーバーのツールをOpenAIのFunctionとして登録
+
+#### カスタムAIクライアント
+```javascript
+// WebSocket接続例
+const ws = new WebSocket('ws://localhost:3000');
+
+// 初期化
+ws.send(JSON.stringify({
+  jsonrpc: '2.0',
+  id: 1,
+  method: 'initialize',
+  params: {
+    protocolVersion: '2024-11-05',
+    capabilities: { tools: {}, resources: {} },
+    clientInfo: { name: 'MyAIClient', version: '1.0.0' }
+  }
+}));
+```
+
 ## クイックスタート
 
 ### 依存関係のインストール
@@ -56,6 +115,9 @@ npm run dev
 
 # 本番モード
 npm start
+
+# AI用起動スクリプト
+./scripts/start-mcp-for-ai.sh
 ```
 
 ### テストクライアントの実行
@@ -166,10 +228,14 @@ MyFirstMCP/
 ├── src/
 │   ├── server.js          # MCPサーバー
 │   └── client.js          # テストクライアント
+├── scripts/
+│   └── start-mcp-for-ai.sh # AI用起動スクリプト
 ├── package.json           # 依存関係とスクリプト
 ├── Dockerfile            # Dockerイメージ定義
 ├── docker-compose.yml    # Docker Compose設定
 ├── .dockerignore         # Docker除外ファイル
+├── claude-desktop-config.json # Claude Desktop設定
+├── mcp-config.json       # 汎用MCP設定
 ├── env.example           # 環境変数例
 └── README.md             # このファイル
 ```
@@ -246,6 +312,30 @@ wscat -c ws://localhost:3000
 # 初期化メッセージを送信
 {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{"tools":{},"resources":{}},"clientInfo":{"name":"TestClient","version":"1.0.0"}}}
 ```
+
+## トラブルシューティング
+
+### MCPサーバーがAIから認識されない場合
+
+1. **Dockerが起動しているか確認**
+   ```bash
+   docker info
+   ```
+
+2. **MCPサーバーが正常に動作しているか確認**
+   ```bash
+   docker-compose ps
+   docker-compose logs
+   ```
+
+3. **設定ファイルのパスを確認**
+   - Claude Desktop: `~/.config/claude/desktop_config.json`
+   - 設定ファイルのJSON形式が正しいか確認
+
+4. **ポートが使用可能か確認**
+   ```bash
+   lsof -i :3000
+   ```
 
 ## ライセンス
 

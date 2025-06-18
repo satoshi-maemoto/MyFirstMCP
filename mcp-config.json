@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "my-first-mcp": {
+      "command": "docker",
+      "args": ["run", "--rm", "-p", "3000:3000", "myfirstmcp-mcp-server"],
+      "env": {
+        "NODE_ENV": "production",
+        "DOCKER_ENV": "true",
+        "PORT": "3000"
+      },
+      "description": "My First MCP Server with echo, time, and calculation tools"
+    }
+  }
+} 
