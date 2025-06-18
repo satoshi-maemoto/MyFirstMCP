@@ -1,107 +1,93 @@
-const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 
 class MCPServer {
-  constructor(port = 3000) {
-    this.port = port;
-    this.wss = new WebSocket.Server({ port });
-    this.clients = new Map();
-    
-    console.log(`🚀 MCP Server starting on port ${port}`);
-    this.setupWebSocketServer();
+  constructor() {
+    this.setupStdioServer();
   }
 
-  setupWebSocketServer() {
-    this.wss.on('connection', (ws, req) => {
-      const clientId = uuidv4();
-      this.clients.set(clientId, ws);
+  setupStdioServer() {
+    console.error('MCP Server starting on stdio');
+    
+    // 標準入出力の設定
+    process.stdin.setEncoding('utf8');
+    process.stdout.setEncoding('utf8');
+    
+    let buffer = '';
+    
+    process.stdin.on('data', (chunk) => {
+      buffer += chunk;
       
-      console.log(`📡 New MCP client connected: ${clientId}`);
+      // 改行で区切られたメッセージを処理
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // 最後の不完全な行をバッファに残す
       
-      ws.on('message', (data) => {
-        try {
-          const message = JSON.parse(data.toString());
-          this.handleMessage(clientId, message);
-        } catch (error) {
-          console.error('❌ Error parsing message:', error);
-          this.sendError(clientId, 'Invalid JSON message');
-        }
-      });
-
-      ws.on('close', () => {
-        console.log(`🔌 MCP client disconnected: ${clientId}`);
-        this.clients.delete(clientId);
-      });
-
-      ws.on('error', (error) => {
-        console.error(`❌ WebSocket error for client ${clientId}:`, error);
-        this.clients.delete(clientId);
-      });
-
-      // Send initial handshake
-      this.sendMessage(clientId, {
-        jsonrpc: '2.0',
-        id: null,
-        method: 'initialize',
-        params: {
-          protocolVersion: '2024-11-05',
-          capabilities: {
-            tools: {},
-            resources: {}
-          },
-          clientInfo: {
-            name: 'MyFirstMCP',
-            version: '1.0.0'
+      for (const line of lines) {
+        if (line.trim()) {
+          try {
+            const message = JSON.parse(line);
+            console.error(`Received message:`, JSON.stringify(message, null, 2));
+            this.handleMessage(message);
+          } catch (error) {
+            console.error(`JSON parse error:`, error.message);
+            this.sendError('Invalid JSON message');
           }
         }
-      });
+      }
     });
 
-    this.wss.on('error', (error) => {
-      console.error('❌ WebSocket server error:', error);
+    process.stdin.on('end', () => {
+      console.error('Stdin ended');
+    });
+
+    process.on('SIGINT', () => {
+      console.error('Received SIGINT, shutting down');
+      process.exit(0);
+    });
+
+    process.on('SIGTERM', () => {
+      console.error('Received SIGTERM, shutting down');
+      process.exit(0);
     });
   }
 
-  handleMessage(clientId, message) {
-    console.log(`📨 Received message from ${clientId}:`, message);
-
+  handleMessage(message) {
     if (!message.jsonrpc || message.jsonrpc !== '2.0') {
-      return this.sendError(clientId, 'Invalid JSON-RPC version');
+      return this.sendError('Invalid JSON-RPC version');
     }
 
     const { id, method, params } = message;
+    console.error(`Handling method: ${method} with id: ${id}`);
 
     switch (method) {
       case 'initialize':
-        this.handleInitialize(clientId, id, params);
+        this.handleInitialize(id, params);
         break;
       case 'tools/list':
-        this.handleToolsList(clientId, id);
+        this.handleToolsList(id);
         break;
       case 'tools/call':
-        this.handleToolsCall(clientId, id, params);
+        this.handleToolsCall(id, params);
         break;
       case 'resources/list':
-        this.handleResourcesList(clientId, id);
+        this.handleResourcesList(id);
         break;
       case 'resources/read':
-        this.handleResourcesRead(clientId, id, params);
+        this.handleResourcesRead(id, params);
         break;
       case 'notifications/list':
-        this.handleNotificationsList(clientId, id);
+        this.handleNotificationsList(id);
         break;
       case 'notifications/subscribe':
-        this.handleNotificationsSubscribe(clientId, id, params);
+        this.handleNotificationsSubscribe(id, params);
         break;
       default:
-        this.sendError(clientId, `Unknown method: ${method}`, id);
+        this.sendError(`Unknown method: ${method}`, id);
     }
   }
 
-  handleInitialize(clientId, id, params) {
-    console.log(`🔧 Initializing client ${clientId}`);
-    
-    this.sendMessage(clientId, {
+  handleInitialize(id, params) {
+    console.error(`Handling initialize request with id: ${id}`);
+    const response = {
       jsonrpc: '2.0',
       id,
       result: {
@@ -116,13 +102,13 @@ class MCPServer {
           version: '1.0.0'
         }
       }
-    });
+    };
+    console.error(`Sending initialize response:`, JSON.stringify(response, null, 2));
+    this.sendMessage(response);
   }
 
-  handleToolsList(clientId, id) {
-    console.log(`🛠️ Listing tools for client ${clientId}`);
-    
-    this.sendMessage(clientId, {
+  handleToolsList(id) {
+    this.sendMessage({
       jsonrpc: '2.0',
       id,
       result: {
@@ -177,10 +163,8 @@ class MCPServer {
     });
   }
 
-  handleToolsCall(clientId, id, params) {
+  handleToolsCall(id, params) {
     const { name, arguments: args } = params;
-    console.log(`🔧 Calling tool ${name} for client ${clientId}`);
-
     try {
       let result;
       
@@ -231,8 +215,8 @@ class MCPServer {
         default:
           throw new Error(`Unknown tool: ${name}`);
       }
-
-      this.sendMessage(clientId, {
+      
+      this.sendMessage({
         jsonrpc: '2.0',
         id,
         result: {
@@ -244,16 +228,13 @@ class MCPServer {
           ]
         }
       });
-      
     } catch (error) {
-      this.sendError(clientId, error.message, id);
+      this.sendError(error.message, id);
     }
   }
 
-  handleResourcesList(clientId, id) {
-    console.log(`📚 Listing resources for client ${clientId}`);
-    
-    this.sendMessage(clientId, {
+  handleResourcesList(id) {
+    this.sendMessage({
       jsonrpc: '2.0',
       id,
       result: {
@@ -269,34 +250,30 @@ class MCPServer {
     });
   }
 
-  handleResourcesRead(clientId, id, params) {
+  handleResourcesRead(id, params) {
     const { uri } = params;
-    console.log(`📖 Reading resource ${uri} for client ${clientId}`);
     
-    // Mock resource content
-    const mockContent = `This is a mock resource content for ${uri}
-Generated at: ${new Date().toISOString()}
-This demonstrates the MCP resource reading capability.`;
-    
-    this.sendMessage(clientId, {
-      jsonrpc: '2.0',
-      id,
-      result: {
-        contents: [
-          {
-            uri,
-            mimeType: 'text/plain',
-            text: mockContent
-          }
-        ]
-      }
-    });
+    if (uri === 'file:///example.txt') {
+      this.sendMessage({
+        jsonrpc: '2.0',
+        id,
+        result: {
+          contents: [
+            {
+              uri: 'file:///example.txt',
+              mimeType: 'text/plain',
+              text: 'Hello from MyFirstMCP server!\nThis is an example resource file.'
+            }
+          ]
+        }
+      });
+    } else {
+      this.sendError(`Resource not found: ${uri}`, id);
+    }
   }
 
-  handleNotificationsList(clientId, id) {
-    console.log(`🔔 Listing notifications for client ${clientId}`);
-    
-    this.sendMessage(clientId, {
+  handleNotificationsList(id) {
+    this.sendMessage({
       jsonrpc: '2.0',
       id,
       result: {
@@ -310,66 +287,49 @@ This demonstrates the MCP resource reading capability.`;
     });
   }
 
-  handleNotificationsSubscribe(clientId, id, params) {
+  handleNotificationsSubscribe(id, params) {
     const { subscriptions } = params;
-    console.log(`🔔 Subscribing to notifications for client ${clientId}:`, subscriptions);
     
-    this.sendMessage(clientId, {
+    this.sendMessage({
       jsonrpc: '2.0',
       id,
       result: {
         subscriptions: subscriptions.map(sub => ({
-          method: sub,
-          status: 'subscribed'
+          method: sub.method,
+          active: true
         }))
       }
     });
   }
 
-  sendMessage(clientId, message) {
-    const ws = this.clients.get(clientId);
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(message));
-    }
+  sendMessage(message) {
+    const messageStr = JSON.stringify(message);
+    console.error(`Sending message:`, messageStr);
+    process.stdout.write(messageStr + '\n');
   }
 
-  sendError(clientId, message, id = null) {
-    this.sendMessage(clientId, {
+  sendError(message, id = null) {
+    const errorMessage = {
       jsonrpc: '2.0',
-      id,
       error: {
         code: -32603,
         message: message
       }
-    });
-  }
-
-  broadcast(message) {
-    this.clients.forEach((ws, clientId) => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(message));
-      }
-    });
+    };
+    
+    if (id !== null) {
+      errorMessage.id = id;
+    }
+    
+    this.sendMessage(errorMessage);
   }
 
   shutdown() {
-    console.log('🛑 Shutting down MCP server...');
-    this.wss.close();
+    process.exit(0);
   }
 }
 
-// Start the server
-const server = new MCPServer(process.env.PORT || 3000);
-
-// Graceful shutdown
-process.on('SIGINT', () => {
-  server.shutdown();
-  process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-  server.shutdown();
-  process.exit(0);
-});
+// サーバー起動
+const server = new MCPServer();
 
 module.exports = server; 

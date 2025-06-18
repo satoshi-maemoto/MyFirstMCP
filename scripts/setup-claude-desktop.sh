@@ -7,9 +7,9 @@ echo "🔧 Setting up MyFirstMCP for Claude Desktop..."
 
 # Determine OS and set config directory
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    CONFIG_DIR="$HOME/Library/Application Support/Claude/Claude.app/Contents/Resources"
-    DESKTOP_CONFIG_DIR="$HOME/.config/claude"
+    # macOS - 正しいClaude Desktop設定ディレクトリ
+    CONFIG_DIR="$HOME/Library/Application Support/Claude"
+    DESKTOP_CONFIG_DIR="$HOME/Library/Application Support/Claude"
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux
     CONFIG_DIR="$HOME/.config/claude"
@@ -32,7 +32,7 @@ mkdir -p "$DESKTOP_CONFIG_DIR"
 
 # Copy the MCP config file
 echo "📋 Copying MCP configuration..."
-cp claude-desktop-config.json "$DESKTOP_CONFIG_DIR/desktop_config.json"
+cp claude-desktop-config.json "$DESKTOP_CONFIG_DIR/claude_desktop_config.json"
 
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
@@ -62,4 +62,7 @@ echo "   - get_time: Get current server time"
 echo "   - calculate: Perform arithmetic calculations"
 echo ""
 echo "📚 Available resources:"
-echo "   - file:///example.txt: Example text file" 
+echo "   - file:///example.txt: Example text file"
+echo ""
+echo "📁 Configuration file location:"
+echo "   $DESKTOP_CONFIG_DIR/claude_desktop_config.json" 

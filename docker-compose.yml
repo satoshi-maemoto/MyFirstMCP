@@ -2,19 +2,12 @@ services:
   mcp-server:
     build: .
     container_name: my-first-mcp
-    ports:
-      - "3000:3000"
     environment:
       - NODE_ENV=production
       - DOCKER_ENV=true
-      - PORT=3000
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "node", "-e", "const WebSocket = require('ws'); const ws = new WebSocket('ws://localhost:3000'); ws.on('open', () => { process.exit(0); }); ws.on('error', () => { process.exit(1); }); setTimeout(() => { process.exit(1); }, 5000);"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    stdin_open: true
+    tty: true
     networks:
       - mcp-network
 

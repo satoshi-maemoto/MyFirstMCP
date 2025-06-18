@@ -13,7 +13,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "ws": "^8.14.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

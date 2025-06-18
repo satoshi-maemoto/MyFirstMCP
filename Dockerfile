@@ -21,16 +21,9 @@ RUN adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Expose the port the app runs on
-EXPOSE 3000
-
 # Set environment variables
 ENV NODE_ENV=production
 ENV DOCKER_ENV=true
 
-# Health check for WebSocket server
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "const WebSocket = require('ws'); const ws = new WebSocket('ws://localhost:3000'); ws.on('open', () => { process.exit(0); }); ws.on('error', () => { process.exit(1); }); setTimeout(() => { process.exit(1); }, 5000);"
-
-# Start the application
-CMD ["npm", "start"] 
+# Start the application directly with node
+CMD ["node", "src/server.js"] 

@@ -5,69 +5,14 @@
       "args": [
         "run",
         "--rm",
-        "-p",
-        "3000:3000",
+        "-i",
         "myfirstmcp-mcp-server"
       ],
       "env": {
         "NODE_ENV": "production",
-        "DOCKER_ENV": "true",
-        "PORT": "3000"
+        "DOCKER_ENV": "true"
       },
-      "description": "My First MCP Server with echo, time, and calculation tools",
-      "capabilities": {
-        "tools": {
-          "echo": {
-            "description": "Echo back the input text",
-            "inputSchema": {
-              "type": "object",
-              "properties": {
-                "text": {
-                  "type": "string",
-                  "description": "Text to echo back"
-                }
-              },
-              "required": ["text"]
-            }
-          },
-          "get_time": {
-            "description": "Get current server time",
-            "inputSchema": {
-              "type": "object",
-              "properties": {}
-            }
-          },
-          "calculate": {
-            "description": "Perform basic arithmetic calculation",
-            "inputSchema": {
-              "type": "object",
-              "properties": {
-                "operation": {
-                  "type": "string",
-                  "enum": ["add", "subtract", "multiply", "divide"],
-                  "description": "Arithmetic operation"
-                },
-                "a": {
-                  "type": "number",
-                  "description": "First number"
-                },
-                "b": {
-                  "type": "number",
-                  "description": "Second number"
-                }
-              },
-              "required": ["operation", "a", "b"]
-            }
-          }
-        },
-        "resources": {
-          "file:///example.txt": {
-            "name": "Example Text File",
-            "description": "A simple example text file",
-            "mimeType": "text/plain"
-          }
-        }
-      }
+      "description": "My First MCP Server with echo, time, and calculation tools"
     }
   }
 } 
