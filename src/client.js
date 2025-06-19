@@ -1,49 +1,48 @@
-const WebSocket = require('ws');
+const { spawn } = require('child_process');
 
-class MCPClient {
-  constructor(url = 'ws://localhost:3000') {
-    this.url = url;
-    this.ws = null;
+class MCPStdioClient {
+  constructor(serverCmd = ['node', 'src/server.js']) {
+    this.serverCmd = serverCmd;
+    this.proc = null;
     this.messageId = 1;
     this.pendingRequests = new Map();
+    this.buffer = '';
   }
 
-  connect() {
+  startServer() {
     return new Promise((resolve, reject) => {
-      this.ws = new WebSocket(this.url);
-      
-      this.ws.on('open', () => {
-        console.log('🔗 Connected to MCP server');
-        resolve();
+      this.proc = spawn(this.serverCmd[0], this.serverCmd.slice(1), {
+        stdio: ['pipe', 'pipe', 'inherit']
       });
-
-      this.ws.on('message', (data) => {
-        try {
-          const message = JSON.parse(data.toString());
-          this.handleMessage(message);
-        } catch (error) {
-          console.error('❌ Error parsing message:', error);
+      this.proc.stdout.setEncoding('utf8');
+      this.proc.stdout.on('data', (chunk) => {
+        this.buffer += chunk;
+        let lines = this.buffer.split('\n');
+        this.buffer = lines.pop();
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const message = JSON.parse(line);
+              this.handleMessage(message);
+            } catch (e) {
+              // ignore non-JSON lines
+            }
+          }
         }
       });
-
-      this.ws.on('error', (error) => {
-        console.error('❌ WebSocket error:', error);
-        reject(error);
+      this.proc.on('spawn', () => {
+        resolve();
       });
-
-      this.ws.on('close', () => {
-        console.log('🔌 Disconnected from MCP server');
+      this.proc.on('error', (err) => {
+        reject(err);
       });
     });
   }
 
   handleMessage(message) {
-    console.log('📨 Received:', message);
-    
     if (message.id && this.pendingRequests.has(message.id)) {
       const { resolve, reject } = this.pendingRequests.get(message.id);
       this.pendingRequests.delete(message.id);
-      
       if (message.error) {
         reject(new Error(message.error.message));
       } else {
@@ -61,124 +60,81 @@ class MCPClient {
         method,
         params
       };
-
       this.pendingRequests.set(id, { resolve, reject });
-      this.ws.send(JSON.stringify(message));
+      this.proc.stdin.write(JSON.stringify(message) + '\n');
     });
   }
 
   async initialize() {
-    console.log('🔧 Initializing...');
     return await this.sendRequest('initialize', {
       protocolVersion: '2024-11-05',
-      capabilities: {
-        tools: {},
-        resources: {}
-      },
-      clientInfo: {
-        name: 'MCPTestClient',
-        version: '1.0.0'
-      }
+      capabilities: { tools: {}, resources: {} },
+      clientInfo: { name: 'MCPTestClient', version: '1.0.0' }
     });
   }
 
   async listTools() {
-    console.log('🛠️ Listing tools...');
     return await this.sendRequest('tools/list');
   }
 
   async callTool(name, args) {
-    console.log(`🔧 Calling tool: ${name}`);
-    return await this.sendRequest('tools/call', {
-      name,
-      arguments: args
-    });
+    return await this.sendRequest('tools/call', { name, arguments: args });
   }
 
-  async listResources() {
-    console.log('📚 Listing resources...');
-    return await this.sendRequest('resources/list');
-  }
-
-  async readResource(uri) {
-    console.log(`📖 Reading resource: ${uri}`);
-    return await this.sendRequest('resources/read', { uri });
-  }
-
-  async listNotifications() {
-    console.log('🔔 Listing notifications...');
-    return await this.sendRequest('notifications/list');
-  }
-
-  async subscribeToNotifications(subscriptions) {
-    console.log('🔔 Subscribing to notifications...');
-    return await this.sendRequest('notifications/subscribe', { subscriptions });
-  }
-
-  disconnect() {
-    if (this.ws) {
-      this.ws.close();
+  async stopServer() {
+    if (this.proc) {
+      this.proc.kill();
     }
   }
 }
 
-// Test function
+// テスト関数
 async function testMCPServer() {
-  const client = new MCPClient();
-  
+  const client = new MCPStdioClient();
   try {
-    await client.connect();
-    
-    // Initialize
+    await client.startServer();
     const initResult = await client.initialize();
     console.log('✅ Initialized:', initResult);
-    
-    // List tools
     const tools = await client.listTools();
     console.log('✅ Tools:', tools);
-    
-    // Test echo tool
     const echoResult = await client.callTool('echo', { text: 'Hello MCP!' });
     console.log('✅ Echo result:', echoResult);
-    
-    // Test get_time tool
     const timeResult = await client.callTool('get_time', {});
     console.log('✅ Time result:', timeResult);
-    
-    // Test calculate tool
-    const calcResult = await client.callTool('calculate', {
-      operation: 'add',
-      a: 10,
-      b: 5
-    });
+    const calcResult = await client.callTool('calculate', { operation: 'add', a: 10, b: 5 });
     console.log('✅ Calculate result:', calcResult);
-    
-    // List resources
-    const resources = await client.listResources();
-    console.log('✅ Resources:', resources);
-    
-    // Read a resource
-    const resourceContent = await client.readResource('file:///example.txt');
-    console.log('✅ Resource content:', resourceContent);
-    
-    // List notifications
-    const notifications = await client.listNotifications();
-    console.log('✅ Notifications:', notifications);
-    
-    // Subscribe to notifications
-    const subscribeResult = await client.subscribeToNotifications(['server/status']);
-    console.log('✅ Subscribe result:', subscribeResult);
-    
+    // csv_analyze: stats
+    const csvStats = await client.callTool('csv_analyze', {
+      action: 'stats',
+      startDate: '2024-05-01',
+      endDate: '2024-06-30',
+      minSize: 10,
+      maxSize: 40
+    });
+    console.log('✅ CSV stats:', csvStats);
+    // csv_analyze: filter_date
+    const csvDateFiltered = await client.callTool('csv_analyze', {
+      action: 'filter_date',
+      startDate: '2024-06-01',
+      endDate: '2024-06-30'
+    });
+    console.log('✅ CSV filter_date:', csvDateFiltered);
+    // csv_analyze: filter_size
+    const csvSizeFiltered = await client.callTool('csv_analyze', {
+      action: 'filter_size',
+      minSize: 20,
+      maxSize: 30
+    });
+    console.log('✅ CSV filter_size:', csvSizeFiltered);
   } catch (error) {
     console.error('❌ Test failed:', error);
   } finally {
-    client.disconnect();
+    await client.stopServer();
   }
 }
 
-// Run test if this file is executed directly
 if (require.main === module) {
   testMCPServer();
 }
 
-module.exports = MCPClient; 
+module.exports = MCPStdioClient; 

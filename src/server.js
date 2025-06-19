@@ -1,4 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const csvAnalyzer = require('./utils/csvAnalyzer');
 
 class MCPServer {
   constructor() {
@@ -162,13 +164,32 @@ class MCPServer {
               },
               required: ['operation', 'a', 'b']
             }
+          },
+          {
+            name: 'csv_analyze',
+            description: 'Analyze sample.csv by date/size. Actions: stats, filter_date, filter_size',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                action: {
+                  type: 'string',
+                  enum: ['stats', 'filter_date', 'filter_size'],
+                  description: 'Analysis type: stats, filter_date, filter_size'
+                },
+                startDate: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
+                endDate: { type: 'string', description: 'End date (YYYY-MM-DD)' },
+                minSize: { type: 'number', description: 'Minimum size' },
+                maxSize: { type: 'number', description: 'Maximum size' }
+              },
+              required: ['action']
+            }
           }
         ]
       }
     });
   }
 
-  handleToolsCall(id, params) {
+  async handleToolsCall(id, params) {
     const { name, arguments: args } = params;
     try {
       let result;
@@ -216,6 +237,33 @@ class MCPServer {
             result: calculationResult
           };
           break;
+          
+        case 'csv_analyze': {
+          const filePath = path.join(__dirname, 'data', 'sample.csv');
+          const data = await csvAnalyzer.parseCSV(filePath);
+          switch (args.action) {
+            case 'stats':
+              // stats: 日付・サイズでフィルタ後、統計量を返す
+              let filtered = data;
+              if (args.startDate && args.endDate) {
+                filtered = csvAnalyzer.filterByDateRange(filtered, args.startDate, args.endDate);
+              }
+              if (typeof args.minSize === 'number' && typeof args.maxSize === 'number') {
+                filtered = csvAnalyzer.filterBySize(filtered, args.minSize, args.maxSize);
+              }
+              result = csvAnalyzer.calculateSizeStats(filtered);
+              break;
+            case 'filter_date':
+              result = csvAnalyzer.filterByDateRange(data, args.startDate, args.endDate);
+              break;
+            case 'filter_size':
+              result = csvAnalyzer.filterBySize(data, args.minSize, args.maxSize);
+              break;
+            default:
+              throw new Error('Unknown action for csv_analyze');
+          }
+          break;
+        }
           
         default:
           throw new Error(`Unknown tool: ${name}`);
