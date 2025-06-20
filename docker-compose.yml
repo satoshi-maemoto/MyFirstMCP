@@ -1,16 +1,40 @@
 services:
-  mcp-server:
+  node:
     build: .
-    container_name: my-first-mcp
+    container_name: mcp_server_node
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
     environment:
-      - NODE_ENV=production
-      - DOCKER_ENV=true
-    restart: unless-stopped
+      - HUGGINGFACE_API_TOKEN=${HUGGINGFACE_API_TOKEN}
+      - CHROMA_URL=http://chroma:8000
+    command: ["node", "src/server.js"]
+    depends_on:
+      chroma:
+        condition: service_healthy
     stdin_open: true
     tty: true
+    networks:
+      - mcp-network
+  chroma:
+    image: chromadb/chroma@sha256:fb188562c940988b1b289180d4a76e132a2d7ce84790f81d161ba7a9b79ef7e1
+    container_name: mcp_server_chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
     networks:
       - mcp-network
 
 networks:
   mcp-network:
-    driver: bridge 
+    driver: bridge
+
+volumes:
+  chroma-data: 

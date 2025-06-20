@@ -340,3 +340,44 @@ wscat -c ws://localhost:3000
 ## ライセンス
 
 MIT
+
+## ベクトル検索型RAGシステム構成
+- Chroma（ベクトルDB, Dockerで起動）
+- Node.jsサーバー（HuggingFace APIでembedding/LLM呼び出し）
+- CSVデータ
+
+## セットアップ手順
+
+1. `.env`ファイルを作成し、HuggingFace APIトークンを設定
+   ```
+   cp env.example .env
+   # .envを編集し、HUGGINGFACE_API_TOKEN=... を自分のトークンに書き換える
+   ```
+2. Docker ComposeでChromaとNode.jsサーバーを起動
+   ```
+   docker-compose up --build
+   ```
+3. サーバーは http://localhost:3000 で、Chromaは http://localhost:8000 で動作します。
+
+## RAG型ベクトル検索ツールの使い方
+
+- `rag_query` ツールを使うと、質問文をembeddingし、CSVデータから類似行を検索してLLMで回答生成します。
+- 例:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "method": "tools/call",
+  "params": {
+    "name": "rag_query",
+    "arguments": {
+      "question": "2023年の売上が最も大きい行は？",
+      "topK": 3
+    }
+  }
+}
+```
+
+- サーバー起動時にCSVデータのembeddingを自動登録します。
+- embedding生成・LLM呼び出しにはHuggingFace APIトークンが必要です。
+- ChromaベクトルDBはDocker Composeで自動起動します。
