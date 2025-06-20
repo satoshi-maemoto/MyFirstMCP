@@ -3,6 +3,7 @@
 
 const { parseCSV, filterByDateRange, filterBySize, calculateSizeStats } = require('./csvAnalyzer');
 const { getEmbedding } = require('./embedding');
+const { getOrCreateCollection, queryEmbedding } = require('./chromaClient');
 // embedding.jsはHuggingFace APIなどを想定
 // vectorStoreはメモリ実装（後でChromaDB SDK等に差し替え可）
 
@@ -30,10 +31,18 @@ function queryVectorStore(queryEmbedding, topK = 5) {
     .slice(0, topK);
 }
 
-// RAG検索：質問をembedding化し、vectorStoreで類似検索
+// RAG検索：質問をembedding化し、ChromaDBで類似検索
 async function ragSearch(question, topK = 5) {
   const qEmbedding = await embedText(question);
-  return queryVectorStore(qEmbedding, topK);
+  const collection = await getOrCreateCollection();
+  const result = await queryEmbedding(collection.id || collection.collection_id, qEmbedding, topK);
+  // ChromaDBの返却形式に合わせて整形
+  return result.documents[0].map((doc, i) => ({
+    id: result.ids[0][i],
+    metadata: result.metadatas[0][i],
+    dist: result.distances[0][i],
+    embedding: undefined // 必要ならresult.embeddings[0][i]
+  }));
 }
 
 module.exports = {

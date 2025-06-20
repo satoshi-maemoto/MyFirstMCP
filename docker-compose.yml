@@ -5,6 +5,8 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER_ENV=true
+    env_file:
+      - .env
     restart: unless-stopped
     stdin_open: true
     tty: true

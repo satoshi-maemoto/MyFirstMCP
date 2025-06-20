@@ -126,6 +126,12 @@ async function testMCPServer() {
       maxSize: 30
     });
     console.log('✅ CSV filter_size:', csvSizeFiltered);
+    // rag_search: RAG検索
+    const ragResult = await client.callTool('rag_search', {
+      question: 'Tell me about a sunny day.',
+      topK: 2
+    });
+    console.log('✅ RAG search result:', ragResult);
   } catch (error) {
     console.error('❌ Test failed:', error);
   } finally {

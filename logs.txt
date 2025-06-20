@@ -1,0 +1,51 @@
+chroma-1  | 
+chroma-1  | ==========
+chroma-1  | persist_path: "/data"
+chroma-1  | 
+chroma-1  | ==========
+chroma-1  | 
+chroma-1  | 
+chroma-1  |                 [38;5;069m(((((((((    [38;5;203m((((([38;5;220m####
+chroma-1  |              [38;5;069m((((((((((((([38;5;203m((((((((([38;5;220m#########
+chroma-1  |            [38;5;069m((((((((((((([38;5;203m((((((((((([38;5;220m###########
+chroma-1  |          [38;5;069m(((((((((((((([38;5;203m(((((((((((([38;5;220m############
+chroma-1  |         [38;5;069m((((((((((((([38;5;203m(((((((((((((([38;5;220m#############
+chroma-1  |         [38;5;069m((((((((((((([38;5;203m(((((((((((((([38;5;220m#############
+chroma-1  |          [38;5;069m(((((((((((([38;5;203m((((((((((((([38;5;220m##############
+chroma-1  |          [38;5;069m(((((((((((([38;5;203m(((((((((((([38;5;220m##############
+chroma-1  |            [38;5;069m(((((((((([38;5;203m((((((((((([38;5;220m#############
+chroma-1  |              [38;5;069m(((((((([38;5;203m(((((((([38;5;220m##############
+chroma-1  |                 [38;5;069m((((([38;5;203m((((    [38;5;220m#########[0m
+chroma-1  | 
+chroma-1  | Saving data to: /data
+chroma-1  | Connect to Chroma at: http://localhost:8000
+chroma-1  | Getting started guide: https://docs.trychroma.com/docs/overview/getting-started
+chroma-1  | 
+chroma-1  | OpenTelemetry is not enabled because it is missing from the config.
+chroma-1  | Listening on 0.0.0.0:8000
+chroma-1  | 
+chroma-1  | ==========
+chroma-1  | persist_path: "/data"
+chroma-1  | 
+chroma-1  | ==========
+chroma-1  | 
+chroma-1  | 
+chroma-1  |                 [38;5;069m(((((((((    [38;5;203m((((([38;5;220m####
+chroma-1  |              [38;5;069m((((((((((((([38;5;203m((((((((([38;5;220m#########
+chroma-1  |            [38;5;069m((((((((((((([38;5;203m((((((((((([38;5;220m###########
+chroma-1  |          [38;5;069m(((((((((((((([38;5;203m(((((((((((([38;5;220m############
+chroma-1  |         [38;5;069m((((((((((((([38;5;203m(((((((((((((([38;5;220m#############
+chroma-1  |         [38;5;069m((((((((((((([38;5;203m(((((((((((((([38;5;220m#############
+chroma-1  |          [38;5;069m(((((((((((([38;5;203m((((((((((((([38;5;220m##############
+chroma-1  |          [38;5;069m(((((((((((([38;5;203m(((((((((((([38;5;220m##############
+chroma-1  |            [38;5;069m(((((((((([38;5;203m((((((((((([38;5;220m#############
+chroma-1  |              [38;5;069m(((((((([38;5;203m(((((((([38;5;220m##############
+chroma-1  |                 [38;5;069m((((([38;5;203m((((    [38;5;220m#########[0m
+chroma-1  | 
+chroma-1  | Saving data to: /data
+chroma-1  | Connect to Chroma at: http://localhost:8000
+chroma-1  | Getting started guide: https://docs.trychroma.com/docs/overview/getting-started
+chroma-1  | 
+chroma-1  | OpenTelemetry is not enabled because it is missing from the config.
+chroma-1  | Listening on 0.0.0.0:8000
+my-first-mcp  | MCP Server starting on stdio

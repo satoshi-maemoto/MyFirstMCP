@@ -1,10 +1,17 @@
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const csvAnalyzer = require('./utils/csvAnalyzer');
+const { registerCSVRowsToChromaDB } = require('./utils/registerCSV');
+const mcpTools = require('./utils/mcpTools');
 
 class MCPServer {
   constructor() {
     this.setupStdioServer();
+    // サーバー起動時にCSVをChromaDBに登録
+    const csvPath = path.join(__dirname, './data/sample.csv');
+    registerCSVRowsToChromaDB(csvPath).catch(e => {
+      console.error('CSV registration to ChromaDB failed:', e);
+    });
   }
 
   setupStdioServer() {
@@ -183,6 +190,18 @@ class MCPServer {
               },
               required: ['action']
             }
+          },
+          {
+            name: 'rag_search',
+            description: 'RAG search over CSV rows using ChromaDB',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                question: { type: 'string', description: 'Query text' },
+                topK: { type: 'number', description: 'Number of results', default: 3 }
+              },
+              required: ['question']
+            }
           }
         ]
       }
@@ -262,6 +281,12 @@ class MCPServer {
             default:
               throw new Error('Unknown action for csv_analyze');
           }
+          break;
+        }
+          
+        case 'rag_search': {
+          const topK = args.topK || 3;
+          result = await mcpTools.ragSearch(args.question, topK);
           break;
         }
           
