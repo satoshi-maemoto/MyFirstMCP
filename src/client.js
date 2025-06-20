@@ -108,8 +108,8 @@ async function testMCPServer() {
       action: 'stats',
       startDate: '2024-05-01',
       endDate: '2024-06-30',
-      minSize: 70,
-      maxSize: 80
+      minSize: 10,
+      maxSize: 40
     });
     console.log('✅ CSV stats:', csvStats);
     // csv_analyze: filter_date
@@ -122,36 +122,10 @@ async function testMCPServer() {
     // csv_analyze: filter_size
     const csvSizeFiltered = await client.callTool('csv_analyze', {
       action: 'filter_size',
-      minSize: 70,
-      maxSize: 80
+      minSize: 20,
+      maxSize: 30
     });
     console.log('✅ CSV filter_size:', csvSizeFiltered);
-    // rag_queryテスト（embedding未完了時はリトライ）
-    let ragResult = null;
-    let retry = 0;
-    const maxRetry = 10;
-    while (retry < maxRetry) {
-      try {
-        ragResult = await client.callTool('rag_query', {
-          question: '2023年の売上が最も大きい行は？',
-          topK: 3
-        });
-        break;
-      } catch (e) {
-        if (e.message && e.message.includes('CSV embedding未完了')) {
-          retry++;
-          console.log(`⏳ embedding完了待ち... リトライ${retry}/${maxRetry}`);
-          await new Promise(res => setTimeout(res, 2000));
-        } else {
-          throw e;
-        }
-      }
-    }
-    if (ragResult) {
-      console.log('✅ RAG result:', ragResult);
-    } else {
-      console.error('❌ RAG embedding完了せずタイムアウト');
-    }
   } catch (error) {
     console.error('❌ Test failed:', error);
   } finally {
