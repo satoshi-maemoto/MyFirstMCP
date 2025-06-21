@@ -13,12 +13,12 @@ services:
     networks:
       - mcp-network
   chroma:
-    image: chromadb/chroma:latest
+    image: chromadb/chroma:0.5.18
     ports:
       - "8000:8000"
     environment:
       - CHROMA_SERVER_ENABLE_REST=true
-      - CHROMA_SERVER_API_VERSION=v2
+#      - CHROMA_SERVER_API_VERSION=v1
 
 networks:
   mcp-network:
