@@ -1,13 +1,13 @@
 const MCPStdioClient = require('./client');
 
-async function testRagSearch() {
+async function testRagSearch(question = 'Tell me about a sunny day.', topK = 2) {
   const client = new MCPStdioClient();
   try {
     await client.startServer();
     await client.initialize();
     const ragResult = await client.callTool('rag_search', {
-      question: 'Tell me about a sunny day.',
-      topK: 2
+      question: question,
+      topK: topK
     });
     console.log('✅ RAG search result:', JSON.stringify(ragResult, null, 2));
   } catch (error) {
@@ -18,5 +18,8 @@ async function testRagSearch() {
 }
 
 if (require.main === module) {
-  testRagSearch();
+  const question = process.argv[2] || 'Tell me about a sunny day.';
+  const topK = parseInt(process.argv[3]) || 2;
+  console.log(`Testing RAG search with question: "${question}", topK: ${topK}`);
+  testRagSearch(question, topK);
 } 

@@ -340,3 +340,39 @@ wscat -c ws://localhost:3000
 ## ライセンス
 
 MIT
+
+## 環境変数の設定
+
+### 1. .envファイルの作成
+
+プロジェクトルートに`.env`ファイルを作成してください：
+
+```bash
+# .envファイルを作成
+cp env.example .env
+```
+
+### 2. 必要な環境変数の設定
+
+`.env`ファイルを編集して、以下の環境変数を設定してください：
+
+```bash
+# Server Configuration
+PORT=3000
+NODE_ENV=production
+DOCKER_ENV=true
+
+# ChromaDB Configuration
+CHROMA_URL=http://chroma:8000
+
+# Hugging Face API Configuration
+HUGGING_FACE_API_TOKEN=your_actual_hugging_face_token_here
+```
+
+### 3. Hugging Face APIトークンの取得
+
+1. [Hugging Face](https://huggingface.co/)にアカウントを作成
+2. [Settings > Access Tokens](https://huggingface.co/settings/tokens)でAPIトークンを生成
+3. 生成されたトークンを`.env`ファイルの`HUGGING_FACE_API_TOKEN`に設定
+
+**注意**: `.env`ファイルは`.gitignore`に含まれているため、Gitにコミットされません。機密情報を安全に管理できます。
