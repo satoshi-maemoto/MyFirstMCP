@@ -1,6 +1,7 @@
 services:
   mcp-server:
     build: .
+    image: myfirstmcp
     container_name: my-first-mcp
     environment:
       - NODE_ENV=production

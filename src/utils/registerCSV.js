@@ -24,7 +24,7 @@ async function registerCSVRowsToChromaDB(csvPath) {
   // 3. ChromaDBに一括登録
   const collection = await getOrCreateCollection();
   await addEmbeddings(collection.id || collection.collection_id, ids, embeddings, metadatas);
-  console.log(`✅ ${rows.length} rows registered to ChromaDB.`);
+  console.error(`✅ ${rows.length} rows registered to ChromaDB.`);
 }
 
 // サンプルCSVファイルで実行

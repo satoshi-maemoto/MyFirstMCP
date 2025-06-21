@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 const csvAnalyzer = require('./utils/csvAnalyzer');
@@ -94,6 +95,10 @@ class MCPServer {
       case 'notifications/subscribe':
         this.handleNotificationsSubscribe(id, params);
         break;
+      // case 'notifications/initialized':
+      //   // Claude Desktopからの初期化通知 - 何も返さない
+      //   console.error(`Handling notifications/initialized notification`);
+      //   break;
       default:
         this.sendError(`Unknown method: ${method}`, id);
     }

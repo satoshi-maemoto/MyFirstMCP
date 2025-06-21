@@ -6,13 +6,13 @@
         "run",
         "--rm",
         "-i",
-        "myfirstmcp-mcp-server"
+        "--env-file",
+        "/Users/maemoto/Documents/GitHub/MyFirstMCP/.env",
+        "--network",
+        "myfirstmcp_mcp-network",
+        "myfirstmcp"
       ],
-      "env": {
-        "NODE_ENV": "production",
-        "DOCKER_ENV": "true"
-      },
-      "description": "My First MCP Server with echo, time, and calculation tools"
+      "description": "My First MCP Server with echo, time, calculation, CSV analysis, and RAG search tools"
     }
   }
 } 
